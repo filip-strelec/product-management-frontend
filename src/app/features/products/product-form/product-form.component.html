@@ -1,0 +1,126 @@
+@if (loading()) {
+  <p class="muted">Loading product…</p>
+} @else if (loadError()) {
+  <div class="card empty">
+    <p class="error-text">{{ loadError() }}</p>
+    <button class="primary" (click)="cancel()">Back</button>
+  </div>
+} @else {
+  <form class="card form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <h1>{{ editingId() === null ? 'New product' : 'Edit product' }}</h1>
+
+    <div class="field">
+      <label for="title">Title <span aria-hidden="true">*</span></label>
+      <input id="title" type="text" formControlName="title" autocomplete="off" />
+      @if (hasError('title', 'required')) {
+        <p class="error-text">Title is required.</p>
+      }
+      @if (hasError('title', 'maxlength')) {
+        <p class="error-text">Title is too long (max 200 characters).</p>
+      }
+      @if (serverError('title'); as msg) {
+        <p class="error-text">{{ msg }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="price">Price <span aria-hidden="true">*</span></label>
+      <input id="price" type="number" step="0.01" min="0" formControlName="price" />
+      @if (hasError('price', 'required')) {
+        <p class="error-text">Price is required.</p>
+      }
+      @if (hasError('price', 'min')) {
+        <p class="error-text">Price must be greater than 0.</p>
+      }
+      @if (serverError('price'); as msg) {
+        <p class="error-text">{{ msg }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" rows="4" formControlName="description"></textarea>
+      @if (hasError('description', 'maxlength')) {
+        <p class="error-text">Description is too long (max 2000 characters).</p>
+      }
+      @if (serverError('description'); as msg) {
+        <p class="error-text">{{ msg }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="category">Category</label>
+      <select id="category" formControlName="category">
+        <option value="">— None —</option>
+        @for (cat of categories(); track cat.slug) {
+          <option [value]="cat.slug">{{ cat.name }}</option>
+        }
+      </select>
+      @if (categories().length === 0) {
+        <p class="muted" style="font-size: 12px;">Categories could not be loaded; leaving this empty is fine.</p>
+      }
+      @if (serverError('category'); as msg) {
+        <p class="error-text">{{ msg }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="thumbnail">Thumbnail</label>
+
+      @if (form.controls.thumbnail.value) {
+        <div class="thumbnail-preview">
+          <img [src]="form.controls.thumbnail.value" alt="Thumbnail preview" />
+          <button type="button" class="link" (click)="clearThumbnail()">Remove</button>
+        </div>
+      }
+
+      <div class="thumbnail-controls">
+        <input
+          id="thumbnailFile"
+          type="file"
+          [accept]="acceptedTypes"
+          [disabled]="uploading()"
+          (change)="onThumbnailSelected($event)"
+        />
+        @if (uploading()) {
+          <span class="muted">Uploading…</span>
+        }
+      </div>
+      <p class="muted" style="font-size: 12px;">
+        Upload a JPEG, PNG, WebP or GIF (max {{ maxThumbnailKb }} KB), or paste a URL below.
+      </p>
+
+      <input
+        id="thumbnail"
+        type="url"
+        formControlName="thumbnail"
+        placeholder="https://…"
+      />
+
+      @if (uploadError(); as msg) {
+        <p class="error-text">{{ msg }}</p>
+      }
+      @if (hasError('thumbnail', 'pattern')) {
+        <p class="error-text">Enter a valid URL starting with http:// or https://.</p>
+      }
+      @if (serverError('thumbnail'); as msg) {
+        <p class="error-text">{{ msg }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="tags">Tags <span class="muted">(comma-separated)</span></label>
+      <input id="tags" type="text" formControlName="tags" placeholder="beauty, mascara" />
+      @if (serverError('tags'); as msg) {
+        <p class="error-text">{{ msg }}</p>
+      }
+    </div>
+
+    <div class="actions">
+      <button type="button" (click)="cancel()" [disabled]="submitting()">Cancel</button>
+      <button type="submit" class="primary" [disabled]="submitting()">
+        {{ submitting() ? 'Saving…' : (editingId() === null ? 'Create product' : 'Save changes') }}
+      </button>
+    </div>
+  </form>
+}

@@ -1,0 +1,42 @@
+<section class="toolbar">
+  <input
+    type="search"
+    placeholder="Search products by title or description…"
+    [formControl]="searchControl"
+    aria-label="Search products"
+  />
+  <a routerLink="/products/new" class="add-link">+ New product</a>
+</section>
+
+@if (loading()) {
+  <p class="muted">Loading products…</p>
+} @else if (error()) {
+  <p class="error-text">{{ error() }}</p>
+} @else if (products().length === 0) {
+  <p class="muted">No products found.</p>
+} @else {
+  <ul class="grid">
+    @for (product of products(); track product.id) {
+      <li class="card product">
+        <a [routerLink]="['/products', product.id]" class="product__link">
+          <img
+            class="product__thumb"
+            [src]="product.thumbnail || 'https://placehold.co/300x200?text=No+image'"
+            [alt]="product.title"
+            loading="lazy"
+          />
+          <div class="product__body">
+            <h3 class="product__title">{{ product.title }}</h3>
+            <p class="product__price">{{ product.price | currency }}</p>
+          </div>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <nav class="pager" aria-label="Pagination">
+    <button (click)="goToPage(skip() - pageSize)" [disabled]="skip() === 0">← Prev</button>
+    <span class="muted">Page {{ currentPage }} of {{ totalPages }} · {{ total() }} total</span>
+    <button (click)="goToPage(skip() + pageSize)" [disabled]="skip() + pageSize >= total()">Next →</button>
+  </nav>
+}
