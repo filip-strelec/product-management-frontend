@@ -31,7 +31,6 @@ Other scripts:
 | Script           | Purpose                          |
 | ---------------- | -------------------------------- |
 | `npm run build`  | Production build to `dist/`      |
-| `npm test`       | Karma + Jasmine unit tests       |
 | `npm run watch`  | Continuous dev build             |
 
 ## Architecture
@@ -83,24 +82,4 @@ inside `tap()`. There is no global store — overkill for 4 screens.
 - **No UI library**. A handful of CSS custom properties keep the surface
   consistent; bringing in Material/PrimeNG would dwarf the actual code.
 - **Comma-separated tags input** instead of a custom chip-list — fewer moving
-  parts, still ergonomic; a richer editor is mentioned as a follow-up.
-
-## Trade-offs / what I'd improve with more time
-
-- Replace the toast `setTimeout` with Angular Material `MatSnackBar` or
-  CDK overlays for proper a11y and stacking.
-- Extract a reusable `<app-pagination>` and `<app-form-field>` component to
-  remove the small amount of duplication between list and form templates.
-- Persist list state (search query, page) in the URL so the browser back/forward
-  buttons work intuitively.
-- Add a few representative tests: `ProductService` with `HttpTestingController`,
-  and a smoke test for `ProductFormComponent` validation.
-- Wire up Angular's `provideExperimentalZonelessChangeDetection()` once stable.
-
-## Out of scope (per the brief)
-
-- Authentication
-- Server-side validation (handled, but only at request-shape level on the API)
-- State management libraries (NgRx, Akita, etc.)
-- Extensive unit testing
-- File uploads
+  parts, still ergonomic.
