@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: '/api',
+  apiBaseUrl: 'https://insidercxback.ssolutions.hr',
 } as const;
