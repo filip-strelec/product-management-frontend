@@ -20,10 +20,20 @@ export interface ProductSearchResult {
   skip: number;
 }
 
+export type ProductSortField =
+  | 'id'
+  | 'title'
+  | 'price'
+  | 'category'
+  | 'createdAt'
+  | 'updatedAt';
+
+export type SortOrder = 'asc' | 'desc';
+
 export interface ProductSearchParams {
   q?: string;
   limit?: number;
   skip?: number;
-  sortBy?: 'id' | 'title' | 'price' | 'category';
-  order?: 'asc' | 'desc';
+  sortBy?: ProductSortField;
+  order?: SortOrder;
 }

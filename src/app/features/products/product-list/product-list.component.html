@@ -8,6 +8,24 @@
   <a routerLink="/products/new" class="add-link">+ New product</a>
 </section>
 
+<section class="sort-bar" aria-label="Sort products">
+  <span class="sort-bar__label muted">Sort by</span>
+  @for (opt of sortOptions; track opt.field) {
+    <button
+      type="button"
+      class="sort-btn"
+      [class.sort-btn--active]="sortBy() === opt.field"
+      [attr.aria-pressed]="sortBy() === opt.field"
+      (click)="setSort(opt)"
+    >
+      {{ opt.label }}
+      @if (sortBy() === opt.field) {
+        <span class="sort-btn__arrow" aria-hidden="true">{{ order() === 'asc' ? '↑' : '↓' }}</span>
+      }
+    </button>
+  }
+</section>
+
 @if (loading()) {
   <p class="muted">Loading products…</p>
 } @else if (error()) {
