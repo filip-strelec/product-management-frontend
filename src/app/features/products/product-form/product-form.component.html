@@ -78,17 +78,19 @@
         <input
           id="thumbnailFile"
           type="file"
-          [accept]="acceptedTypes"
-          [disabled]="uploading()"
+          [accept]="acceptedTypes()"
+          [disabled]="uploading() || !uploadConfig()"
           (change)="onThumbnailSelected($event)"
         />
         @if (uploading()) {
           <span class="muted">Uploading…</span>
         }
       </div>
-      <p class="muted" style="font-size: 12px;">
-        Upload a JPEG, PNG, WebP or GIF (max {{ maxThumbnailKb }} KB), or paste a URL below.
-      </p>
+      @if (maxThumbnailKb(); as maxKb) {
+        <p class="muted" style="font-size: 12px;">
+          Upload an image (max {{ maxKb }} KB), or paste a URL below.
+        </p>
+      }
 
       <input
         id="thumbnail"
@@ -100,7 +102,7 @@
       @if (uploadError(); as msg) {
         <p class="error-text">{{ msg }}</p>
       }
-      @if (hasError('thumbnail', 'pattern')) {
+      @if (hasError('thumbnail', 'url')) {
         <p class="error-text">Enter a valid URL starting with http:// or https://.</p>
       }
       @if (serverError('thumbnail'); as msg) {

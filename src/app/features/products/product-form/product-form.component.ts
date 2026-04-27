@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
@@ -6,14 +5,17 @@ import {
   DestroyRef,
   Input,
   OnInit,
+  computed,
   inject,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
+  AbstractControl,
   FormBuilder,
   FormControl,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -21,13 +23,9 @@ import { catchError, of, tap } from 'rxjs';
 import { CategoryService } from '../../../core/services/category.service';
 import { ProductService } from '../../../core/services/product.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import {
-  ALLOWED_THUMBNAIL_TYPES,
-  MAX_THUMBNAIL_BYTES,
-  UploadService,
-} from '../../../core/services/upload.service';
-import type { Category } from '../../../core/models/category.model';
-import type { CreateProductInput, Product } from '../../../core/models/product.model';
+import { UploadService, type UploadConfig } from '../../../core/services/upload.service';
+import type { Category } from '../../../core/types/category.types';
+import type { CreateProductInput, Product } from '../../../core/types/product.types';
 
 interface ProductForm {
   title: FormControl<string>;
@@ -38,13 +36,26 @@ interface ProductForm {
   tags: FormControl<string>;
 }
 
-/** Lightweight URL check (not exhaustive) used only to give early UX feedback. */
-const URL_PATTERN = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+/**
+ * URL validator backed by the native `URL` constructor — same semantics as the
+ * backend's Zod `.url()` check, so client and server agree on what's valid.
+ * Accepts any http(s) URL (including `http://localhost`).
+ */
+const httpUrlValidator = (control: AbstractControl<string>): ValidationErrors | null => {
+  const value = control.value?.trim();
+  if (!value) return null;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? null : { url: true };
+  } catch {
+    return { url: true };
+  }
+};
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './product-form.component.html',
   styleUrl: './product-form.component.scss',
@@ -61,10 +72,8 @@ export class ProductFormComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 
-  /** Comma-separated list of accepted image MIME types for the file input. */
-  protected readonly acceptedTypes = ALLOWED_THUMBNAIL_TYPES.join(',');
-  /** Friendly cap, used in the helper text under the file picker. */
-  protected readonly maxThumbnailKb = Math.round(MAX_THUMBNAIL_BYTES / 1024);
+  /** Upload constraints fetched from the backend; null until loaded. */
+  protected readonly uploadConfig = signal<UploadConfig | null>(null);
 
   protected readonly editingId = signal<number | null>(null);
   protected readonly loading = signal(false);
@@ -74,24 +83,37 @@ export class ProductFormComponent implements OnInit {
   protected readonly uploading = signal(false);
   protected readonly uploadError = signal<string | null>(null);
 
+  /** Comma-separated MIME list for the file input's `accept` attribute. */
+  protected readonly acceptedTypes = computed(
+    () => this.uploadConfig()?.allowedMimeTypes.join(',') ?? '',
+  );
+
+  /** Friendly cap (KB) shown beneath the file picker; null while loading. */
+  protected readonly maxThumbnailKb = computed(() => {
+    const cfg = this.uploadConfig();
+    return cfg ? Math.round(cfg.maxBytes / 1024) : null;
+  });
+
   protected readonly form = this.fb.group<ProductForm>({
     title: this.fb.nonNullable.control('', [Validators.required, Validators.maxLength(200)]),
     price: this.fb.control<number | null>(null, [Validators.required, Validators.min(0.01)]),
     description: this.fb.nonNullable.control('', [Validators.maxLength(2000)]),
     category: this.fb.nonNullable.control('', [Validators.maxLength(100)]),
-    thumbnail: this.fb.nonNullable.control('', [Validators.pattern(URL_PATTERN)]),
+    thumbnail: this.fb.nonNullable.control('', [httpUrlValidator]),
     tags: this.fb.nonNullable.control(''),
   });
 
   ngOnInit(): void {
     this.loadCategories();
+    this.loadUploadConfig();
     this.wireServerErrorReset();
     if (this.id) this.loadProduct(this.id);
   }
 
   /** Clears the synthetic `server` error on any control once the user edits it. */
   private wireServerErrorReset(): void {
-    for (const control of Object.values(this.form.controls)) {
+    const controls: AbstractControl[] = Object.values(this.form.controls);
+    for (const control of controls) {
       control.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
         const errors = control.errors;
         if (errors && 'server' in errors) {
@@ -160,6 +182,16 @@ export class ProductFormComponent implements OnInit {
           // for typing a slug (validation happens on the server).
           return of([] as Category[]);
         }),
+      )
+      .subscribe();
+  }
+
+  private loadUploadConfig(): void {
+    this.uploadService
+      .getConfig()
+      .pipe(
+        tap((cfg) => this.uploadConfig.set(cfg)),
+        catchError(() => of(null)),
       )
       .subscribe();
   }
@@ -262,12 +294,17 @@ export class ProductFormComponent implements OnInit {
 
   /** Returns a user-facing error string, or null when the file is acceptable. */
   private validateThumbnail(file: File): string | null {
-    if (!ALLOWED_THUMBNAIL_TYPES.includes(file.type as (typeof ALLOWED_THUMBNAIL_TYPES)[number])) {
-      return `Unsupported file type (${file.type || 'unknown'}). Use JPEG, PNG, WebP, or GIF.`;
+    const cfg = this.uploadConfig();
+    if (!cfg) {
+      // Config still loading — defer to the server, which will reject if needed.
+      return null;
     }
-    if (file.size > MAX_THUMBNAIL_BYTES) {
+    if (!cfg.allowedMimeTypes.includes(file.type)) {
+      return `Unsupported file type (${file.type || 'unknown'}).`;
+    }
+    if (file.size > cfg.maxBytes) {
       const sizeKb = Math.round(file.size / 1024);
-      return `File is too large (${sizeKb} KB). Max ${this.maxThumbnailKb} KB.`;
+      return `File is too large (${sizeKb} KB). Max ${Math.round(cfg.maxBytes / 1024)} KB.`;
     }
     return null;
   }

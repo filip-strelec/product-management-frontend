@@ -6,9 +6,11 @@ export interface Product {
   price: number;
   thumbnail: string;
   tags: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-export type CreateProductInput = Omit<Product, 'id'>;
+export type CreateProductInput = Omit<Product, 'id' | 'createdAt' | 'updatedAt'>;
 export type UpdateProductInput = Partial<CreateProductInput>;
 
 export interface ProductSearchResult {

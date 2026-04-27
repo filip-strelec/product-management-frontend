@@ -41,8 +41,10 @@ src/app/
 ├── app.config.ts               # providers: router, http client, interceptors
 ├── app.routes.ts               # lazy-loaded standalone routes
 ├── core/
-│   ├── models/product.model.ts         # shared types (no `any` anywhere)
+│   ├── models/                         # shared types (no `any` anywhere)
 │   ├── services/product.service.ts     # typed HTTP wrapper around the API
+│   ├── services/category.service.ts    # cached category lookup
+│   ├── services/upload.service.ts      # thumbnail upload + GET /uploads/config
 │   ├── services/notification.service.ts # tiny signal-based toast bus
 │   └── interceptors/error.interceptor.ts # surfaces 5xx / network errors
 └── features/products/

@@ -36,7 +36,7 @@
 
   <nav class="pager" aria-label="Pagination">
     <button (click)="goToPage(skip() - pageSize)" [disabled]="skip() === 0">← Prev</button>
-    <span class="muted">Page {{ currentPage }} of {{ totalPages }} · {{ total() }} total</span>
+    <span class="muted">Page {{ currentPage() }} of {{ totalPages() }} · {{ total() }} total</span>
     <button (click)="goToPage(skip() + pageSize)" [disabled]="skip() + pageSize >= total()">Next →</button>
   </nav>
 }

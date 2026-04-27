@@ -31,6 +31,13 @@
 
       <p class="detail__description">{{ p.description || 'No description provided.' }}</p>
 
+      <dl class="detail__meta">
+        <dt>Created</dt>
+        <dd>{{ p.createdAt | date: 'medium' }}</dd>
+        <dt>Updated</dt>
+        <dd>{{ p.updatedAt | date: 'medium' }}</dd>
+      </dl>
+
       <div class="detail__actions">
         <a [routerLink]="['/products', p.id, 'edit']" class="primary button-link">Edit</a>
         <button (click)="back()">Back</button>

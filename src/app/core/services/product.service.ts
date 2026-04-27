@@ -8,7 +8,7 @@ import type {
   ProductSearchParams,
   ProductSearchResult,
   UpdateProductInput,
-} from '../models/product.model';
+} from '../types/product.types';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {

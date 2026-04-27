@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal } fro
 import { Router, RouterLink } from '@angular/router';
 import { catchError, of, tap } from 'rxjs';
 import { ProductService } from '../../../core/services/product.service';
-import type { Product } from '../../../core/models/product.model';
+import type { Product } from '../../../core/types/product.types';
 
 @Component({
   selector: 'app-product-detail',

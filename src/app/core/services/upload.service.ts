@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface ThumbnailUploadResult {
@@ -10,23 +10,32 @@ export interface ThumbnailUploadResult {
   mimeType: string;
 }
 
-/** Mirrors the backend MAX_UPLOAD_BYTES default; kept in sync via README. */
-export const MAX_THUMBNAIL_BYTES = 1_048_576;
-export const ALLOWED_THUMBNAIL_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-] as const;
+export interface UploadConfig {
+  maxBytes: number;
+  allowedMimeTypes: string[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class UploadService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${environment.apiBaseUrl}/uploads/thumbnail`;
+  private readonly base = `${environment.apiBaseUrl}/uploads`;
+
+  /** Constraints rarely change; cache the first successful response. */
+  private config$: Observable<UploadConfig> | null = null;
+
+  getConfig(): Observable<UploadConfig> {
+    if (!this.config$) {
+      this.config$ = this.http.get<UploadConfig>(`${this.base}/config`).pipe(
+        tap({ error: () => (this.config$ = null) }),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+    }
+    return this.config$;
+  }
 
   uploadThumbnail(file: File): Observable<ThumbnailUploadResult> {
     const body = new FormData();
     body.append('file', file, file.name);
-    return this.http.post<ThumbnailUploadResult>(this.url, body);
+    return this.http.post<ThumbnailUploadResult>(`${this.base}/thumbnail`, body);
   }
 }

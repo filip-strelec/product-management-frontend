@@ -4,6 +4,7 @@ import {
   Component,
   DestroyRef,
   OnInit,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -12,7 +13,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { Observable, catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 import { ProductService } from '../../../core/services/product.service';
-import type { Product, ProductSearchResult } from '../../../core/models/product.model';
+import type { Product, ProductSearchResult } from '../../../core/types/product.types';
 
 @Component({
   selector: 'app-product-list',
@@ -34,6 +35,9 @@ export class ProductListComponent implements OnInit {
   protected readonly skip = signal(0);
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
+
+  protected readonly currentPage = computed(() => Math.floor(this.skip() / this.pageSize) + 1);
+  protected readonly totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize)));
 
   ngOnInit(): void {
     this.searchControl.valueChanges
@@ -61,14 +65,6 @@ export class ProductListComponent implements OnInit {
     if (nextSkip < 0 || nextSkip >= this.total()) return;
     this.skip.set(nextSkip);
     this.fetch(this.searchControl.value, nextSkip).subscribe();
-  }
-
-  protected get currentPage(): number {
-    return Math.floor(this.skip() / this.pageSize) + 1;
-  }
-
-  protected get totalPages(): number {
-    return Math.max(1, Math.ceil(this.total() / this.pageSize));
   }
 
   private fetch(q: string, skip: number): Observable<ProductSearchResult | null> {

@@ -35,6 +35,18 @@
 
   &__description { white-space: pre-wrap; margin-top: var(--space-4); }
 
+  &__meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-4) 0 0;
+    font-size: 13px;
+    color: var(--color-muted);
+
+    dt { font-weight: 600; }
+    dd { margin: 0; }
+  }
+
   &__actions { display: flex; gap: var(--space-3); margin-top: var(--space-5); }
 }
 

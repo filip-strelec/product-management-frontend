@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type { Category } from '../models/category.model';
+import type { Category } from '../types/category.types';
 
 @Injectable({ providedIn: 'root' })
 export class CategoryService {
