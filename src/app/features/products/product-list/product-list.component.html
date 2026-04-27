@@ -27,7 +27,10 @@
 </section>
 
 @if (loading()) {
-  <p class="muted">Loading products…</p>
+  <div class="loading" role="status" aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    <span class="visually-hidden">Loading products…</span>
+  </div>
 } @else if (error()) {
   <p class="error-text">{{ error() }}</p>
 } @else if (products().length === 0) {
