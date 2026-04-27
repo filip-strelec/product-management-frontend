@@ -5,43 +5,45 @@
     <p class="error-text">{{ error() }}</p>
     <button class="primary" (click)="back()">Back to list</button>
   </div>
-} @else if (product(); as p) {
-  <article class="detail card">
-    <img
-      class="detail__thumb"
-      [src]="p.thumbnail || 'https://placehold.co/600x400?text=No+image'"
-      [alt]="p.title"
-    />
+} @else {
+  @if (product(); as p) {
+    <article class="detail card">
+      <img
+        class="detail__thumb"
+        [src]="p.thumbnail || 'https://placehold.co/600x400?text=No+image'"
+        [alt]="p.title"
+      />
 
-    <div class="detail__body">
-      <header class="detail__header">
-        <h1>{{ p.title }}</h1>
-        <span class="detail__price">{{ p.price | currency }}</span>
-      </header>
+      <div class="detail__body">
+        <header class="detail__header">
+          <h1>{{ p.title }}</h1>
+          <span class="detail__price">{{ p.price | currency }}</span>
+        </header>
 
-      <p class="muted">Category: <strong>{{ p.category || '—' }}</strong></p>
+        <p class="muted">Category: <strong>{{ p.category || '—' }}</strong></p>
 
-      @if (p.tags.length) {
-        <ul class="tags">
-          @for (tag of p.tags; track tag) {
-            <li class="tag">{{ tag }}</li>
-          }
-        </ul>
-      }
+        @if (p.tags.length) {
+          <ul class="tags">
+            @for (tag of p.tags; track tag) {
+              <li class="tag">{{ tag }}</li>
+            }
+          </ul>
+        }
 
-      <p class="detail__description">{{ p.description || 'No description provided.' }}</p>
+        <p class="detail__description">{{ p.description || 'No description provided.' }}</p>
 
-      <dl class="detail__meta">
-        <dt>Created</dt>
-        <dd>{{ p.createdAt | date: 'medium' }}</dd>
-        <dt>Updated</dt>
-        <dd>{{ p.updatedAt | date: 'medium' }}</dd>
-      </dl>
+        <dl class="detail__meta">
+          <dt>Created</dt>
+          <dd>{{ p.createdAt | date: 'medium' }}</dd>
+          <dt>Updated</dt>
+          <dd>{{ p.updatedAt | date: 'medium' }}</dd>
+        </dl>
 
-      <div class="detail__actions">
-        <a [routerLink]="['/products', p.id, 'edit']" class="primary button-link">Edit</a>
-        <button (click)="back()">Back</button>
+        <div class="detail__actions">
+          <a [routerLink]="['/products', p.id, 'edit']" class="primary button-link">Edit</a>
+          <button (click)="back()">Back</button>
+        </div>
       </div>
-    </div>
-  </article>
+    </article>
+  }
 }
